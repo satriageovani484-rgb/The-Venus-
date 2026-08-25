@@ -1,69 +1,86 @@
-loadstring([[
-local plr = game.Players.LocalPlayer
-local char = plr.Character or plr.CharacterAdded:Wait()
-local root = char:WaitForChild("HumanoidRootPart")
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local userInput = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
 
-local fly = false
-local speed = 60
-local bv, bg
+local flying = false
+local flySpeed = 60
+local bodyVelocity = nil
+local bodyGyro = nil
 
-local function toggleFly(state)
-    if state then
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-        bv = Instance.new("BodyVelocity")
-        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-        bv.Parent = root
-        bg = Instance.new("BodyGyro")
-        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-        bg.Parent = root
-        fly = true
-        print("FLY ON! Gas cuy!")
+local function toggleFly(enable)
+    if enable then
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.Parent = rootPart
+        
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.Parent = rootPart
+        
+        flying = true
     else
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-        fly = false
-        print("FLY OFF.")
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        flying = false
     end
 end
 
-local dir = Vector3.new(0,0,0)
+local moveDirection = Vector3.new(0, 0, 0)
 
-UIS.InputBegan:Connect(function(inp, gp)
-    if gp then return end
-    local k = inp.KeyCode
-    if k == Enum.KeyCode.F then toggleFly(not fly) end
-    if k == Enum.KeyCode.W then dir = dir + Vector3.new(0,0,-1) end
-    if k == Enum.KeyCode.S then dir = dir + Vector3.new(0,0,1) end
-    if k == Enum.KeyCode.A then dir = dir + Vector3.new(-1,0,0) end
-    if k == Enum.KeyCode.D then dir = dir + Vector3.new(1,0,0) end
-    if k == Enum.KeyCode.Space then dir = dir + Vector3.new(0,1,0) end
-    if k == Enum.KeyCode.LeftShift then dir = dir + Vector3.new(0,-1,0) end
-end)
-
-UIS.InputEnded:Connect(function(inp, gp)
-    if gp then return end
-    local k = inp.KeyCode
-    if k == Enum.KeyCode.W then dir = dir - Vector3.new(0,0,-1) end
-    if k == Enum.KeyCode.S then dir = dir - Vector3.new(0,0,1) end
-    if k == Enum.KeyCode.A then dir = dir - Vector3.new(-1,0,0) end
-    if k == Enum.KeyCode.D then dir = dir - Vector3.new(1,0,0) end
-    if k == Enum.KeyCode.Space then dir = dir - Vector3.new(0,1,0) end
-    if k == Enum.KeyCode.LeftShift then dir = dir - Vector3.new(0,-1,0) end
-end)
-
-RS.RenderStepped:Connect(function()
-    if fly and root and bv then
-        local cam = workspace.CurrentCamera
-        local f = cam.CFrame.LookVector
-        local r = cam.CFrame.RightVector
-        local u = cam.CFrame.UpVector
-        bv.Velocity = (f * dir.Z * -1 + r * dir.X + u * dir.Y) * speed
-        bg.CFrame = cam.CFrame
+userInput.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local key = input.KeyCode
+    
+    if key == Enum.KeyCode.F then
+        toggleFly(not flying)
+    elseif key == Enum.KeyCode.W then
+        moveDirection = moveDirection + Vector3.new(0, 0, -1)
+    elseif key == Enum.KeyCode.S then
+        moveDirection = moveDirection + Vector3.new(0, 0, 1)
+    elseif key == Enum.KeyCode.A then
+        moveDirection = moveDirection + Vector3.new(-1, 0, 0)
+    elseif key == Enum.KeyCode.D then
+        moveDirection = moveDirection + Vector3.new(1, 0, 0)
+    elseif key == Enum.KeyCode.Space then
+        moveDirection = moveDirection + Vector3.new(0, 1, 0)
+    elseif key == Enum.KeyCode.LeftShift then
+        moveDirection = moveDirection + Vector3.new(0, -1, 0)
     end
 end)
 
-print("Skrip fly siap! Tekan F buat terbang.")
-]])()
+userInput.InputEnded:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local key = input.KeyCode
+    
+    if key == Enum.KeyCode.W then
+        moveDirection = moveDirection - Vector3.new(0, 0, -1)
+    elseif key == Enum.KeyCode.S then
+        moveDirection = moveDirection - Vector3.new(0, 0, 1)
+    elseif key == Enum.KeyCode.A then
+        moveDirection = moveDirection - Vector3.new(-1, 0, 0)
+    elseif key == Enum.KeyCode.D then
+        moveDirection = moveDirection - Vector3.new(1, 0, 0)
+    elseif key == Enum.KeyCode.Space then
+        moveDirection = moveDirection - Vector3.new(0, 1, 0)
+    elseif key == Enum.KeyCode.LeftShift then
+        moveDirection = moveDirection - Vector3.new(0, -1, 0)
+    end
+end)
+
+runService.RenderStepped:Connect(function()
+    if flying and rootPart and bodyVelocity then
+        local camera = workspace.CurrentCamera
+        local forward = camera.CFrame.LookVector
+        local right = camera.CFrame.RightVector
+        local up = camera.CFrame.UpVector
+        
+        local velocity = (forward * moveDirection.Z * -1 + right * moveDirection.X + up * moveDirection.Y) * flySpeed
+        bodyVelocity.Velocity = velocity
+        bodyGyro.CFrame = camera.CFrame
+    end
+end)
