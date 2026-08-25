@@ -1,0 +1,86 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local userInput = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+local flying = false
+local flySpeed = 60
+local bodyVelocity = nil
+local bodyGyro = nil
+
+local function toggleFly(enable)
+    if enable then
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.Parent = rootPart
+        
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.Parent = rootPart
+        
+        flying = true
+    else
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        flying = false
+    end
+end
+
+local moveDirection = Vector3.new(0, 0, 0)
+
+userInput.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local key = input.KeyCode
+    
+    if key == Enum.KeyCode.F then
+        toggleFly(not flying)
+    elseif key == Enum.KeyCode.W then
+        moveDirection = moveDirection + Vector3.new(0, 0, -1)
+    elseif key == Enum.KeyCode.S then
+        moveDirection = moveDirection + Vector3.new(0, 0, 1)
+    elseif key == Enum.KeyCode.A then
+        moveDirection = moveDirection + Vector3.new(-1, 0, 0)
+    elseif key == Enum.KeyCode.D then
+        moveDirection = moveDirection + Vector3.new(1, 0, 0)
+    elseif key == Enum.KeyCode.Space then
+        moveDirection = moveDirection + Vector3.new(0, 1, 0)
+    elseif key == Enum.KeyCode.LeftShift then
+        moveDirection = moveDirection + Vector3.new(0, -1, 0)
+    end
+end)
+
+userInput.InputEnded:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local key = input.KeyCode
+    
+    if key == Enum.KeyCode.W then
+        moveDirection = moveDirection - Vector3.new(0, 0, -1)
+    elseif key == Enum.KeyCode.S then
+        moveDirection = moveDirection - Vector3.new(0, 0, 1)
+    elseif key == Enum.KeyCode.A then
+        moveDirection = moveDirection - Vector3.new(-1, 0, 0)
+    elseif key == Enum.KeyCode.D then
+        moveDirection = moveDirection - Vector3.new(1, 0, 0)
+    elseif key == Enum.KeyCode.Space then
+        moveDirection = moveDirection - Vector3.new(0, 1, 0)
+    elseif key == Enum.KeyCode.LeftShift then
+        moveDirection = moveDirection - Vector3.new(0, -1, 0)
+    end
+end)
+
+runService.RenderStepped:Connect(function()
+    if flying and rootPart and bodyVelocity then
+        local camera = workspace.CurrentCamera
+        local forward = camera.CFrame.LookVector
+        local right = camera.CFrame.RightVector
+        local up = camera.CFrame.UpVector
+        
+        local velocity = (forward * moveDirection.Z * -1 + right * moveDirection.X + up * moveDirection.Y) * flySpeed
+        bodyVelocity.Velocity = velocity
+        bodyGyro.CFrame = camera.CFrame
+    end
+end)
