@@ -1,0 +1,98 @@
+-- Fly Script by SkTeamProject (Embedded Version)
+-- Owner: SkTeamProject
+-- Full feature: Fly + Noclip + Speed Control
+-- Tekan F buat aktifin/matikan fly, X buat noclip, WASD+Space+Shift buat gerak
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local root = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local flyEnabled = false
+local noclipEnabled = true
+local speed = 60
+local bodyVel, bodyGyro
+
+local function toggleFly(state)
+    if state then
+        if bodyVel then bodyVel:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        bodyVel = Instance.new("BodyVelocity")
+        bodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        bodyVel.Parent = root
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        bodyGyro.Parent = root
+        flyEnabled = true
+        print("[FLY] ON! Gas cuy!")
+    else
+        if bodyVel then bodyVel:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        flyEnabled = false
+        print("[FLY] OFF.")
+    end
+end
+
+local function toggleNoclip(state)
+    noclipEnabled = state
+    if state then
+        RunService.Stepped:Connect(function()
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end)
+        print("[NOCLIP] ON!")
+    else
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        print("[NOCLIP] OFF!")
+    end
+end
+
+local moveVector = Vector3.new(0, 0, 0)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    local key = input.KeyCode
+    if key == Enum.KeyCode.F then toggleFly(not flyEnabled) end
+    if key == Enum.KeyCode.X then toggleNoclip(not noclipEnabled) end
+    if key == Enum.KeyCode.W then moveVector = moveVector + Vector3.new(0,0,-1) end
+    if key == Enum.KeyCode.S then moveVector = moveVector + Vector3.new(0,0,1) end
+    if key == Enum.KeyCode.A then moveVector = moveVector + Vector3.new(-1,0,0) end
+    if key == Enum.KeyCode.D then moveVector = moveVector + Vector3.new(1,0,0) end
+    if key == Enum.KeyCode.Space then moveVector = moveVector + Vector3.new(0,1,0) end
+    if key == Enum.KeyCode.LeftShift then moveVector = moveVector + Vector3.new(0,-1,0) end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gp)
+    if gp then return end
+    local key = input.KeyCode
+    if key == Enum.KeyCode.W then moveVector = moveVector - Vector3.new(0,0,-1) end
+    if key == Enum.KeyCode.S then moveVector = moveVector - Vector3.new(0,0,1) end
+    if key == Enum.KeyCode.A then moveVector = moveVector - Vector3.new(-1,0,0) end
+    if key == Enum.KeyCode.D then moveVector = moveVector - Vector3.new(1,0,0) end
+    if key == Enum.KeyCode.Space then moveVector = moveVector - Vector3.new(0,1,0) end
+    if key == Enum.KeyCode.LeftShift then moveVector = moveVector - Vector3.new(0,-1,0) end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if flyEnabled and root and bodyVel then
+        local cam = workspace.CurrentCamera
+        local forward = cam.CFrame.LookVector
+        local right = cam.CFrame.RightVector
+        local up = cam.CFrame.UpVector
+        local vel = (forward * moveVector.Z * -1 + right * moveVector.X + up * moveVector.Y) * speed
+        bodyVel.Velocity = vel
+        bodyGyro.CFrame = cam.CFrame
+    end
+end)
+
+toggleNoclip(true)
+print("[SYSTEM] Skrip fly siap! Tekan F (fly), X (noclip), WASD+Space+Shift buat gerak.")
