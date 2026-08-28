@@ -1,6 +1,12 @@
--- Skrip GUI Box by SkTeamProject
--- Owner: The-Venus
--- Fitur: Fly, Noclip, WalkSpeed, Infinite Jump, ESP All Players
+local url = "https://raw.githubusercontent.com/satriageovani484-rgb/The-Venus-/refs/heads/main/The-Venus.lua"
+local success, result = pcall(function()
+    return game:HttpGet(url)
+end)
+if success then
+    loadstring(result)()
+else
+    warn("Gagal load skrip: " .. tostring(result))
+end
 
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
