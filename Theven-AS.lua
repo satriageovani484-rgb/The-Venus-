@@ -1,6 +1,7 @@
--- Skrip GUI Box by SkTeamProject
+-- Skrip GUI Box by The venus
 -- Owner: The-Venus
 -- Fitur: Fly, Noclip, WalkSpeed, Infinite Jump, ESP All Players
+-- Menu bisa dibuka/tutup pake tombol di pojok layar
 
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
@@ -20,6 +21,9 @@ local bodyVelocity = nil
 local bodyGyro = nil
 local moveDirection = Vector3.new(0,0,0)
 local espObjects = {}
+local noclipConnection = nil
+local jumpConnection = nil
+local menuVisible = true
 
 -- Fungsi Fly
 local function toggleFly(state)
@@ -27,10 +31,10 @@ local function toggleFly(state)
         if bodyVelocity then bodyVelocity:Destroy() end
         if bodyGyro then bodyGyro:Destroy() end
         bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
         bodyVelocity.Parent = rootPart
         bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
         bodyGyro.Parent = rootPart
         flyEnabled = true
     else
@@ -43,43 +47,41 @@ end
 -- Fungsi Noclip
 local function toggleNoclip(state)
     noclipEnabled = state
-    game:GetService("RunService").Stepped:Connect(function()
-        if noclipEnabled and char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
+    if noclipConnection then noclipConnection:Disconnect() end
+    if state then
+        noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
             end
-        end
-    end)
+        end)
+    end
 end
 
 -- Fungsi WalkSpeed
 local function toggleSpeed(state)
     speedEnabled = state
-    if state then
-        humanoid.WalkSpeed = walkSpeed
-    else
-        humanoid.WalkSpeed = 16
-    end
+    humanoid.WalkSpeed = state and walkSpeed or 16
 end
 
 -- Fungsi Infinite Jump
 local function toggleJump(state)
     jumpEnabled = state
+    if jumpConnection then jumpConnection:Disconnect() end
     if state then
         humanoid.JumpPower = jumpPower
-        game:GetService("UserInputService").JumpRequest:Connect(function()
-            if jumpEnabled then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
+        jumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end)
     else
         humanoid.JumpPower = 50
     end
 end
 
--- Fungsi ESP All Players
+-- Fungsi ESP
 local function toggleESP(state)
     espEnabled = state
     if state then
@@ -111,7 +113,7 @@ local function toggleESP(state)
     end
 end
 
--- Kontrol Fly (WASD + Space + Shift)
+-- Kontrol Fly
 game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
     if gp then return end
     local key = input.KeyCode
@@ -149,14 +151,29 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- Buat GUI Box
+-- ===== GUI =====
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "SkTeamGUI"
 screenGui.Parent = player.PlayerGui
 
+-- Tombol toggle menu (di pojok layar)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+toggleBtn.Text = "☰"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 24
+toggleBtn.Parent = screenGui
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(1, 0)
+btnCorner.Parent = toggleBtn
+
+-- Main Menu (bisa digeser)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 250, 0, 300)
-mainFrame.Position = UDim2.new(0.5, -125, 0.5, -150)
+mainFrame.Size = UDim2.new(0, 250, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -160)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 mainFrame.BackgroundTransparency = 0.1
 mainFrame.BorderSizePixel = 0
@@ -165,6 +182,7 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 12)
 corner.Parent = mainFrame
 
+-- Title (Drag Handler)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
 title.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
@@ -175,6 +193,39 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.Parent = mainFrame
 
+-- Drag Logic
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+title.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Fungsi buat bikin tombol toggle di dalam menu
 local function createButton(name, yPos, toggleFunc)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.8, 0, 0, 30)
@@ -199,16 +250,13 @@ local function createButton(name, yPos, toggleFunc)
     return btn
 end
 
--- Tombol
 createButton("Fly", 40, toggleFly)
 createButton("Noclip", 80, toggleNoclip)
-createButton("Speed", 120, function(state)
-    toggleSpeed(state)
-end)
+createButton("Speed", 120, toggleSpeed)
 createButton("Jump", 160, toggleJump)
 createButton("ESP", 200, toggleESP)
 
--- Tombol Close
+-- Tombol Close di dalam menu
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -222,4 +270,11 @@ closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
-print("SkTeamProject GUI Loaded! Gas terus cuy!")
+-- Fungsi toggle menu (buka/tutup)
+toggleBtn.MouseButton1Click:Connect(function()
+    menuVisible = not menuVisible
+    mainFrame.Visible = menuVisible
+    toggleBtn.Text = menuVisible and "☰" or "✕"
+end)
+
+print("SkTeamProject GUI Loaded! Gas terus cuy! (Klik ☰ di pojok buka/tutup menu)")
