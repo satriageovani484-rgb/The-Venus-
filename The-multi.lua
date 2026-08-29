@@ -726,7 +726,15 @@ closeBtn.Parent = mainFrame
 closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
-
+local function toggleFly(state)
+    flyEnabled = state
+    if state then
+        -- Initialize bodyVelocity and bodyGyro
+        -- Set up fly movement logic
+    else
+        -- Clean up
+    end
+end
 -- Fungsi toggle menu (buka/tutup)
 toggleBtn.MouseButton1Click:Connect(function()
     menuVisible = not menuVisible
