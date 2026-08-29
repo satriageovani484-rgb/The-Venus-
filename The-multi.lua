@@ -183,18 +183,45 @@ local function toggleESP(state)
 end
 
 -- ===== FLY CONTROLS (WASD + Space + Shift) =====
+local keys = {
+    [Enum.KeyCode.W] = Vector3.new(0,0,-1),
+    [Enum.KeyCode.S] = Vector3.new(0,0,1),
+    [Enum.KeyCode.A] = Vector3.new(-1,0,0),
+    [Enum.KeyCode.D] = Vector3.new(1,0,0),
+    [Enum.KeyCode.Space] = Vector3.new(0,1,0),
+    [Enum.KeyCode.LeftShift] = Vector3.new(0,-1,0),
+}
+local keysPressed = {}
+
 game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
     if gp then return end
     local key = input.KeyCode
-    if flyEnabled then
-        if key == Enum.KeyCode.W then moveDirection = moveDirection + Vector3.new(0,0,-1) end
-        if key == Enum.KeyCode.S then moveDirection = moveDirection + Vector3.new(0,0,1) end
-        if key == Enum.KeyCode.A then moveDirection = moveDirection + Vector3.new(-1,0,0) end
-        if key == Enum.KeyCode.D then moveDirection = moveDirection + Vector3.new(1,0,0) end
-        if key == Enum.KeyCode.Space then moveDirection = moveDirection + Vector3.new(0,1,0) end
-        if key == Enum.KeyCode.LeftShift then moveDirection = moveDirection + Vector3.new(0,-1,0) end
+    if keys[key] then
+        keysPressed[key] = true
+        updateMoveDirection()
     end
 end)
+
+game:GetService("UserInputService").InputEnded:Connect(function(input, gp)
+    if gp then return end
+    local key = input.KeyCode
+    if keys[key] then
+        keysPressed[key] = false
+        updateMoveDirection()
+    end
+end)
+
+-- ===== UPDATE MOVE DIRECTION =====
+local function updateMoveDirection()
+    moveDirection = Vector3.new(0,0,0)
+    if flyEnabled then
+        for key, dir in pairs(keys) do
+            if keysPressed[key] then
+                moveDirection = moveDirection + dir
+            end
+        end
+    end
+end
 
 game:GetService("UserInputService").InputEnded:Connect(function(input, gp)
     if gp then return end
