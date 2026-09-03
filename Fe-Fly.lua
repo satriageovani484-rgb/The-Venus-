@@ -168,14 +168,15 @@ onof.MouseButton1Down:connect(function()
 	else 
 		nowe = true
 
-	
+
 
 		for i = 1, speeds do
 			spawn(function()
 
 				local hb = game:GetService("RunService").Heartbeat	
 
-					tpwalking = true
+
+				tpwalking = true
 				local chr = game.Players.LocalPlayer.Character
 				local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
 				while tpwalking and hb:Wait() and chr and hum and hum.Parent do
@@ -211,9 +212,8 @@ onof.MouseButton1Down:connect(function()
 		speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
 	end
 
-	
 
-	
+
 
 	if game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid").RigType == Enum.HumanoidRigType.R6 then
 
@@ -254,10 +254,10 @@ onof.MouseButton1Down:connect(function()
 				end
 			end
 			if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p)[...]
+				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
 				lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
 			elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctr[...]
+				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
 			else
 				bv.velocity = Vector3.new(0,0,0)
 			end
@@ -272,7 +272,6 @@ onof.MouseButton1Down:connect(function()
 		plr.Character.Humanoid.PlatformStand = false
 		game.Players.LocalPlayer.Character.Animate.Disabled = false
 		tpwalking = false
-
 
 
 
@@ -313,12 +312,163 @@ onof.MouseButton1Down:connect(function()
 				end
 			end
 			if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p)[...]
+				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
 				lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
 			elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctr[...]
+				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
 			else
 				bv.velocity = Vector3.new(0,0,0)
 			end
-	
-This is long; tool call continues in next message
+
+			bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
+		end
+		ctrl = {f = 0, b = 0, l = 0, r = 0}
+		lastctrl = {f = 0, b = 0, l = 0, r = 0}
+		speed = 0
+		bg:Destroy()
+		bv:Destroy()
+		plr.Character.Humanoid.PlatformStand = false
+		game.Players.LocalPlayer.Character.Animate.Disabled = false
+		tpwalking = false
+
+
+
+	end
+
+
+
+
+
+end)
+
+local tis
+
+up.MouseButton1Down:connect(function()
+	tis = up.MouseEnter:connect(function()
+		while tis do
+			wait()
+			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,1,0)
+		end
+	end)
+end)
+
+up.MouseLeave:connect(function()
+	if tis then
+		tis:Disconnect()
+		tis = nil
+	end
+end)
+
+local dis
+
+down.MouseButton1Down:connect(function()
+	dis = down.MouseEnter:connect(function()
+		while dis do
+			wait()
+			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,-1,0)
+		end
+	end)
+end)
+
+down.MouseLeave:connect(function()
+	if dis then
+		dis:Disconnect()
+		dis = nil
+	end
+end)
+
+
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
+	wait(0.7)
+	game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
+	game.Players.LocalPlayer.Character.Animate.Disabled = false
+
+end)
+
+
+plus.MouseButton1Down:connect(function()
+	speeds = speeds + 1
+	speed.Text = speeds
+	if nowe == true then
+
+
+		tpwalking = false
+		for i = 1, speeds do
+			spawn(function()
+
+				local hb = game:GetService("RunService").Heartbeat	
+
+
+				tpwalking = true
+				local chr = game.Players.LocalPlayer.Character
+				local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
+				while tpwalking and hb:Wait() and chr and hum and hum.Parent do
+					if hum.MoveDirection.Magnitude > 0 then
+						chr:TranslateBy(hum.MoveDirection)
+					end
+				end
+
+			end)
+		end
+	end
+end)
+mine.MouseButton1Down:connect(function()
+	if speeds == 1 then
+		speed.Text = 'cannot be less than 1'
+		wait(1)
+		speed.Text = speeds
+	else
+		speeds = speeds - 1
+		speed.Text = speeds
+		if nowe == true then
+			tpwalking = false
+			for i = 1, speeds do
+				spawn(function()
+
+					local hb = game:GetService("RunService").Heartbeat	
+
+
+					tpwalking = true
+					local chr = game.Players.LocalPlayer.Character
+					local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
+					while tpwalking and hb:Wait() and chr and hum and hum.Parent do
+						if hum.MoveDirection.Magnitude > 0 then
+							chr:TranslateBy(hum.MoveDirection)
+						end
+					end
+
+				end)
+			end
+		end
+	end
+end)
+
+closebutton.MouseButton1Click:Connect(function()
+	main:Destroy()
+end)
+
+mini.MouseButton1Click:Connect(function()
+	up.Visible = false
+	down.Visible = false
+	onof.Visible = false
+	plus.Visible = false
+	speed.Visible = false
+	mine.Visible = false
+	mini.Visible = false
+	mini2.Visible = true
+	main.Frame.BackgroundTransparency = 1
+	closebutton.Position =  UDim2.new(0, 0, -1, 57)
+end)
+
+mini2.MouseButton1Click:Connect(function()
+	up.Visible = true
+	down.Visible = true
+	onof.Visible = true
+	plus.Visible = true
+	speed.Visible = true
+	mine.Visible = true
+	mini.Visible = true
+	mini2.Visible = false
+	main.Frame.BackgroundTransparency = 0 
+	closebutton.Position =  UDim2.new(0, 0, -1, 27)
+end)
